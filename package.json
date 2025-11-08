@@ -14,7 +14,9 @@
   "type": "commonjs",
   "main": "server.js",
   "scripts": {
-    "test": "node server.js"
+    "dev": "NODE_ENV=development nodemon server.js",
+    "production": "NODE_ENV=production nodemon server.js",
+    "debug": "node --inspect server.js"
   },
   "dependencies": {
     "@dotenvx/dotenvx": "^1.51.1",
