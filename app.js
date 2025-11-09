@@ -1,13 +1,14 @@
 require("@dotenvx/dotenvx").config();
 const express = require("express");
 const morgan = require("morgan");
+const cookieParser = require("cookie-parser");
 const userRouter = require("./routes/usersRouter");
-
-// middlewares
 
 // create the app
 const app = express();
 
+// middlewares
+app.use(cookieParser());
 // use json form data parsing middleware
 app.use(express.json());
 
