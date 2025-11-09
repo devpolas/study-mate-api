@@ -17,3 +17,5 @@ router
   .route("/rejected-request")
   .post(friendshipController.cancelFriendRequest);
 router.route("/unfriend").post(friendshipController.unfriend);
+
+module.exports = router;

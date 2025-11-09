@@ -26,11 +26,7 @@ const friendshipSchema = new mongoose.Schema(
 friendshipSchema.index({ requester: 1, recipient: 1 }), { unique: true };
 
 friendshipSchema.pre("/^find/", function (next) {
-  this.populate({
-    path: "requester",
-  }).populate({
-    path: "recipient",
-  });
+  this.populate("requester").populate("recipient");
   next();
 });
 friendshipSchema.statics.findRelation = async function (userA, userB) {
