@@ -84,4 +84,12 @@ exports.protect = catchAsync(async (req, res, next) => {
   if (!currentUser) {
     return next(new AppError("Please Create Account First", 401));
   }
+
+  if (currentUser.isPasswordChanged(decode.iat)) {
+    return next(new AppError("Please Login!", 401));
+  }
+
+  // grant access to protected route
+  req.user = currentUser;
+  next();
 });
