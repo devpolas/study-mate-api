@@ -1,14 +1,46 @@
-const friendshipSchema = new mongoose.Schema({
-  requester: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-  recipient: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-  status: {
-    type: String,
-    enum: ["pending", "accepted", "rejected", "Blocked"],
-    default: "pending",
+const mongoose = require("mongoose");
+
+const friendshipSchema = new mongoose.Schema(
+  {
+    requester: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+    recipient: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+    status: {
+      type: String,
+      enum: ["pending", "accepted", "rejected", "blocked"],
+      default: "pending",
+    },
+    createdAt: { type: Date, default: Date.now },
+    updatedAt: Date,
   },
-  createdAt: { type: Date, default: Date.now },
-  updatedAt: Date,
+  { timestamp: true }
+);
+
+friendshipSchema.index({ requester: 1, recipient: 1 }), { unique: true };
+
+friendshipSchema.pre("/^find/", function (next) {
+  this.populate({
+    path: "requester",
+  }).populate({
+    path: "recipient",
+  });
+  next();
 });
+friendshipSchema.statics.findRelation = async function (userA, userB) {
+  return await this.findOne({
+    $or: [
+      { requester: userA, recipient: userB },
+      { requester: userB, recipient: userA },
+    ],
+  });
+};
 
 const Friendship = mongoose.model("Friendship", friendshipSchema);
 

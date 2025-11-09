@@ -78,8 +78,19 @@ const userSchema = new mongoose.Schema(
       default: Date.now,
     },
   },
-  { timestamps: true }
+  { timestamps: true, toJSON: { virtuals: true }, toObject: { virtuals: true } }
 );
+
+userSchema.virtual("friendRequests", {
+  ref: "Friendship",
+  foreignField: "requester",
+  localField: "_id",
+});
+userSchema.virtual("sentRequests", {
+  ref: "Friendship",
+  foreignField: "requester",
+  localField: "_id",
+});
 
 userSchema.pre("save", async function (next) {
   const isFirebase =
