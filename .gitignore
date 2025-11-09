@@ -7,3 +7,5 @@ dist/
 build/
 # Ignore IDE/editor config files
 .vscode/
+
+firebase*
