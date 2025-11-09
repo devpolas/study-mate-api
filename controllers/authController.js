@@ -93,3 +93,8 @@ exports.protect = catchAsync(async (req, res, next) => {
   req.user = currentUser;
   next();
 });
+
+// social login
+exports.socialLogin = catchAsync(async (req, res, next) => {
+  const { fireBaseUid } = req.body;
+});
