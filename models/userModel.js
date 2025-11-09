@@ -33,6 +33,7 @@ const userSchema = new mongoose.Schema(
       },
       default: "beginner",
     },
+    location: String,
     ratingAverage: Number,
   },
   { timestamps: true }
