@@ -20,6 +20,12 @@ if (process.env.NODE_ENV === "development") {
 }
 
 // routers
+app.use("/", (req, res) => {
+  res.status(200).json({
+    status: success,
+    message: "Hello from server!",
+  });
+});
 app.use("/api/v1/users", userRouter);
 app.use("/api/v1/friendships", friendshipRouter);
 
