@@ -17,27 +17,42 @@ firebaseAdmin.initializeApp({
   credential: firebaseAdmin.credential.cert(serviceAccount),
 });
 
-function signJsonWebToken(id) {
-  return jwt.sign({ id }, process.env.JWT_SECRET, {
-    expiresIn: process.env.JWT_EXPIRES_IN,
-  });
-}
+const createAccessToken = (user) => {
+  return jwt.sign(
+    { id: user._id, tokenVersion: user.tokenVersion },
+    process.env.ACCESS_JWT_SECRET,
+    { expiresIn: process.env.ACCESS_JWT_EXPIRES_IN }
+  );
+};
+
+const createRefreshToken = (user) => {
+  return jwt.sign(
+    { id: user._id, tokenVersion: user.tokenVersion },
+    process.env.REFRESH_JWT_SECRET,
+    { expiresIn: process.env.REFRESH_JWT_EXPIRES_IN }
+  );
+};
 
 function sendJwtCookies(user, statusCode, res) {
-  const token = signJsonWebToken(user._id);
+  const accessToken = createAccessToken(user);
+  const refreshToken = createRefreshToken(user);
 
-  const cookiesOptions = {
+  const refreshCookieOptions = {
     expires: new Date(
-      Date.now() + parseInt(process.env.COOKIES_EXPIRE_IN * 24 * 60 * 60 * 1000)
+      Date.now() +
+        parseInt(process.env.REFRESH_JWT_EXPIRES_IN) * 24 * 60 * 60 * 1000
     ),
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
+    sameSite: "strict",
+    path: "/api/v1/auth/refresh_token",
   };
-  res.cookie("token", token, cookiesOptions);
+
+  res.cookie("refreshToken", refreshToken, refreshCookieOptions);
 
   res.status(statusCode).json({
     status: "success",
-    token,
+    token: accessToken,
   });
 }
 
@@ -90,11 +105,18 @@ exports.protect = catchAsync(async (req, res, next) => {
     return next(new AppError("Please login first", 401));
   }
 
-  const decode = await promisify(jwt.verify)(token, process.env.JWT_SECRET);
+  const decode = await promisify(jwt.verify)(
+    token,
+    process.env.ACCESS_JWT_SECRET
+  );
 
   const currentUser = await User.findById(decode.id);
   if (!currentUser) {
     return next(new AppError("Please Create Account First", 401));
+  }
+
+  if (currentUser.tokenVersion !== decoded.tokenVersion) {
+    return next(new AppError("Please login again.", 401));
   }
 
   if (currentUser.isPasswordChanged(decode.iat)) {
@@ -104,6 +126,59 @@ exports.protect = catchAsync(async (req, res, next) => {
   // grant access to protected route
   req.user = currentUser;
   next();
+});
+
+exports.refreshToken = catchAsync(async (req, res, next) => {
+  // 1 Get refresh token from HTTP-only cookie
+  const token = req.cookies.refreshToken;
+  if (!token) {
+    return next(new AppError("No refresh token provided. Please login.", 401));
+  }
+
+  // 2 Verify refresh token
+  let decoded;
+  try {
+    decoded = jwt.verify(token, process.env.REFRESH_JWT_SECRET);
+  } catch (err) {
+    return next(
+      new AppError("Invalid or expired refresh token. Please login.", 401)
+    );
+  }
+
+  // 3 Check if user exists
+  const user = await User.findById(decoded.id);
+  if (!user) {
+    return next(new AppError("User not found. Please login.", 401));
+  }
+
+  // 4 Check token version
+  if (user.tokenVersion !== decoded.tokenVersion) {
+    return next(
+      new AppError("Refresh token revoked. Please login again.", 401)
+    );
+  }
+
+  // 5 Issue new tokens
+  const newAccessToken = createAccessToken(user);
+  const newRefreshToken = createRefreshToken(user);
+
+  // 6 Send new refresh token as cookie
+  res.cookie("refreshToken", newRefreshToken, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "strict",
+    path: "/api/v1/auth/refresh_token",
+    expires: new Date(
+      Date.now() +
+        parseInt(process.env.REFRESH_JWT_EXPIRES_IN) * 24 * 60 * 60 * 1000
+    ),
+  });
+
+  // 7 Send new access token in response
+  res.status(200).json({
+    status: "success",
+    token: newAccessToken,
+  });
 });
 
 // social login
@@ -122,4 +197,34 @@ exports.socialLogin = catchAsync(async (req, res, next) => {
   }
   const decode = await firebaseAdmin.auth().verifyIdToken(token);
   console.log(decode);
+});
+
+exports.logout = catchAsync(async (req, res, next) => {
+  const userId = req.user ? req.user._id : req.body.userId;
+
+  if (!userId) {
+    return next(new AppError("User not found", 400));
+  }
+
+  // 1 Increment tokenVersion in DB
+  const user = await User.findByIdAndUpdate(userId, {
+    $inc: { tokenVersion: 1 },
+  });
+
+  const cookieOption = {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "strict",
+    path: "/api/v1/auth/refresh_token",
+    expires: new Date(0), // Set cookie expiry to past date
+  };
+
+  // 2 Clear refresh token cookie
+  res.cookie("refreshToken", "", cookieOption);
+
+  // 3 Optional: send response
+  res.status(200).json({
+    status: "success",
+    message: "Logged out successfully",
+  });
 });

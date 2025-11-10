@@ -73,6 +73,10 @@ const userSchema = new mongoose.Schema(
     },
     location: String,
     ratingAverage: { type: Number, default: 0, min: 0, max: 5 },
+    tokenVersion: {
+      type: Number,
+      default: 0,
+    },
     createAt: {
       type: Date,
       default: Date.now,

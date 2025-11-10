@@ -7,9 +7,11 @@ const router = express.Router();
 // public routes
 router.route("/signup").post(authController.signup);
 router.route("/login").post(authController.login);
+router.route("/refresh_token").post(authController.refreshToken);
 
 // protected routes
 router.use(authController.protect);
+router.route("/logout").get(authController.logout);
 router.route("/updateMe").patch(userController.updateUser);
 router.route("/me").get(userController.me, userController.getUser);
 
