@@ -19,13 +19,42 @@ if (process.env.NODE_ENV === "development") {
   app.use(morgan("dev"));
 }
 
-// routers
-app.use("/", (req, res) => {
+app.get("/", (req, res) => {
   res.status(200).json({
     status: "success",
     message: "Hello from server!",
   });
 });
+
+app.post("/", (req, res) => {
+  res.status(200).json({
+    status: "success",
+    message: "This route You only test the server! Hello from server!",
+  });
+});
+
+app.patch("/", (req, res) => {
+  res.status(200).json({
+    status: "success",
+    message: "This route You only test the server! Hello from server!",
+  });
+});
+
+app.put("/", (req, res) => {
+  res.status(200).json({
+    status: "success",
+    message: "This route You only test the server! Hello from server!",
+  });
+});
+
+app.delete("/", (req, res) => {
+  res.status(200).json({
+    status: "success",
+    message: "This route You only test the server! Hello from server!",
+  });
+});
+
+// routers
 app.use("/api/v1/users", userRouter);
 app.use("/api/v1/friendships", friendshipRouter);
 
