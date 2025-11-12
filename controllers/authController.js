@@ -65,6 +65,20 @@ function sendJwtCookies(user, statusCode, res) {
 // handel signup
 
 exports.signup = catchAsync(async (req, res, next) => {
+  const existingUser = await User.findOne({
+    email: req.body.email,
+    authProvider: "firebase",
+  });
+
+  if (existingUser) {
+    return next(
+      new AppError(
+        "This email is already registered using Firebase social login. Please sign in with that method.",
+        400
+      )
+    );
+  }
+
   const newUser = await User.create({
     name: req.body.name,
     email: req.body.email,
@@ -197,7 +211,6 @@ exports.refreshToken = catchAsync(async (req, res, next) => {
 // handel social login
 exports.socialLogin = catchAsync(async (req, res, next) => {
   let token;
-
   if (
     req.headers.authorization &&
     req.headers.authorization.startsWith("Bearer ")
@@ -208,8 +221,30 @@ exports.socialLogin = catchAsync(async (req, res, next) => {
   if (!token) {
     return next(new AppError("Please login first", 401));
   }
-  const decode = await firebaseAdmin.auth().verifyIdToken(token);
-  console.log(decode);
+  let decode;
+  try {
+    decode = await firebaseAdmin.auth().verifyIdToken(token);
+  } catch (err) {
+    console.error("Firebase token verification failed:", err);
+    return next(new AppError("Invalid Firebase token", 401));
+  }
+
+  const { uid, email, name, picture } = decode;
+  const provider = "firebase";
+
+  let user = await User.findOne({ email });
+
+  if (!user) {
+    user = await User.create({
+      name: name || "No Name",
+      email,
+      image: picture || "",
+      authProvider: provider,
+      firebaseUid: uid,
+    });
+  }
+
+  sendJwtCookies(user, 200, res);
 });
 
 exports.logout = catchAsync(async (req, res, next) => {
