@@ -11,6 +11,12 @@ exports.getAllUser = catchAsync(async (req, res, next) => {
   // 1. Copy req.query
   const queryObj = { ...req.query };
 
+  // Check if slug filter exists
+  if (queryObj.slug) {
+    queryObj.slug = { $regex: `^${queryObj.slug}`, $options: "i" };
+    // ^ matches the beginning, 'i' is case-insensitive
+  }
+
   // 2. Extract sort parameter
   const sortBy = queryObj.sort;
   delete queryObj.sort;
