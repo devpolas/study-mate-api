@@ -71,7 +71,6 @@ exports.signup = catchAsync(async (req, res, next) => {
     password: req.body.password,
     passwordConfirm: req.body.passwordConfirm,
     image: req.body.image,
-    role: req.body.role,
     authProvider: "mongodb",
   });
 
