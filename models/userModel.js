@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
+const slugify = require("slugify");
 
 const userSchema = new mongoose.Schema(
   {
@@ -81,6 +82,7 @@ const userSchema = new mongoose.Schema(
       type: Date,
       default: Date.now,
     },
+    slug: { type: String, unique: true, index: true },
   },
   { timestamps: true, toJSON: { virtuals: true }, toObject: { virtuals: true } }
 );
@@ -94,6 +96,13 @@ userSchema.virtual("sentRequests", {
   ref: "Friendship",
   foreignField: "requester",
   localField: "_id",
+});
+
+userSchema.pre("save", function (next) {
+  if (this.isModified("name")) {
+    this.slug = slugify(this.name, { lower: true, strict: true });
+  }
+  next();
 });
 
 userSchema.pre("save", async function (next) {

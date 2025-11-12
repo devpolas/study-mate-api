@@ -8,11 +8,24 @@ exports.me = catchAsync(async (req, res, next) => {
 });
 
 exports.getAllUser = catchAsync(async (req, res, next) => {
-  const queryObject = { ...req.query };
-  console.log(queryObject);
+  // 1. Copy req.query
+  const queryObj = { ...req.query };
 
-  const query = User.find(queryObject);
+  // 2. Extract sort parameter
+  const sortBy = queryObj.sort;
+  delete queryObj.sort;
 
+  // 3. Build the Mongoose query
+  let query = User.find(queryObj);
+
+  // 4. Apply sorting if provided
+  if (sortBy) {
+    // Allow comma-separated fields: ?sort=name,-createdAt
+    const sortString = sortBy.split(",").join(" ");
+    query = query.sort(sortString);
+  }
+
+  // 5. Execute the query
   const users = await query;
 
   if (!users || users.length === 0) {
