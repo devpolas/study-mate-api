@@ -25,7 +25,6 @@ const sendDevError = (err, res) => {
 };
 
 const sendProductionError = (err, res) => {
-  console.log(err);
   // Don't send accidentally other error
   if (err.isOperational) {
     res.status(err.statusCode).json({

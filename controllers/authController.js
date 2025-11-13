@@ -216,8 +216,6 @@ exports.socialLogin = catchAsync(async (req, res, next) => {
     token = req.body.googleAuthToken;
   }
 
-  console.log(token);
-
   if (!token) {
     return next(new AppError("Please login first", 401));
   }
