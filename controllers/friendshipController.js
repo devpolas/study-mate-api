@@ -100,45 +100,46 @@ exports.acceptFriendRequest = catchAsync(async (req, res, next) => {
     message: "Friend request accepted successfully!",
     data: friendship,
   });
-  exports.unfriend = catchAsync(async (req, res, next) => {
-    const requesterId = req.user._id;
-    const { recipientId } = req.body;
+});
 
-    const friendship = await Friendship.findOneAndDelete({
-      $or: [
-        { requester: requesterId, recipient: recipientId, status: "accepted" },
-        { requester: recipientId, recipient: requesterId, status: "accepted" },
-      ],
-    });
+exports.unfriend = catchAsync(async (req, res, next) => {
+  const requesterId = req.user._id;
+  const { recipientId } = req.body;
 
-    if (!friendship) {
-      return next(new AppError("No existing friendship found", 404));
-    }
-
-    res.status(200).json({
-      status: "success",
-      message: "Unfriended successfully!",
-    });
+  const friendship = await Friendship.findOneAndDelete({
+    $or: [
+      { requester: requesterId, recipient: recipientId, status: "accepted" },
+      { requester: recipientId, recipient: requesterId, status: "accepted" },
+    ],
   });
 
-  exports.unfriend = catchAsync(async (req, res, next) => {
-    const requesterId = req.user._id;
-    const { recipientId } = req.body;
+  if (!friendship) {
+    return next(new AppError("No existing friendship found", 404));
+  }
 
-    const friendship = await Friendship.findOneAndDelete({
-      $or: [
-        { requester: requesterId, recipient: recipientId, status: "accepted" },
-        { requester: recipientId, recipient: requesterId, status: "accepted" },
-      ],
-    });
+  res.status(200).json({
+    status: "success",
+    message: "Unfriended successfully!",
+  });
+});
 
-    if (!friendship) {
-      return next(new AppError("No existing friendship found", 404));
-    }
+exports.unfriend = catchAsync(async (req, res, next) => {
+  const requesterId = req.user._id;
+  const { recipientId } = req.body;
 
-    res.status(200).json({
-      status: "success",
-      message: "Unfriended successfully!",
-    });
+  const friendship = await Friendship.findOneAndDelete({
+    $or: [
+      { requester: requesterId, recipient: recipientId, status: "accepted" },
+      { requester: recipientId, recipient: requesterId, status: "accepted" },
+    ],
+  });
+
+  if (!friendship) {
+    return next(new AppError("No existing friendship found", 404));
+  }
+
+  res.status(200).json({
+    status: "success",
+    message: "Unfriended successfully!",
   });
 });
