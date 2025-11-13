@@ -211,12 +211,11 @@ exports.refreshToken = catchAsync(async (req, res, next) => {
 // handel social login
 exports.socialLogin = catchAsync(async (req, res, next) => {
   let token;
-  if (
-    req.headers.authorization &&
-    req.headers.authorization.startsWith("Bearer ")
-  ) {
-    token = req.headers.authorization.split(" ")[1];
+  if (req.body.googleAuthToken) {
+    token = req.body.googleAuthToken;
   }
+
+  console.log(token);
 
   if (!token) {
     return next(new AppError("Please login first", 401));
@@ -228,6 +227,7 @@ exports.socialLogin = catchAsync(async (req, res, next) => {
     console.error("Firebase token verification failed:", err);
     return next(new AppError("Invalid Firebase token", 401));
   }
+  console.log(decode);
 
   const { uid, email, name, picture } = decode;
   const provider = "firebase";
