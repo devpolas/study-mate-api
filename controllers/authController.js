@@ -234,8 +234,6 @@ exports.socialLogin = catchAsync(async (req, res, next) => {
 
   let user = await User.findOne({ email });
 
-  let user = await User.findOne({ email });
-
   if (user && user.authProvider !== provider) {
     return next(
       new AppError(
@@ -254,7 +252,6 @@ exports.socialLogin = catchAsync(async (req, res, next) => {
       firebaseUid: uid,
     });
   }
-
 
   sendJwtCookies(user, 200, res);
 });
