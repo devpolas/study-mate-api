@@ -5,6 +5,7 @@ const cookieParser = require("cookie-parser");
 const userRouter = require("./routes/usersRouter");
 const friendshipRouter = require("./routes/friendshipRouter");
 const globalErrorHandler = require("./controllers/globalErrorController");
+const cors = require("cors");
 
 // create the app
 const app = express();
@@ -13,6 +14,7 @@ const app = express();
 app.use(cookieParser());
 // use json form data parsing middleware
 app.use(express.json());
+app.use(cors());
 
 // requests are logging console
 if (process.env.NODE_ENV === "development") {
